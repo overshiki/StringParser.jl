@@ -1,4 +1,4 @@
-include("utils.jl")
+using NestedArray
 
 rm_strSpace(str::String)::String = begin 
     length(str)==0 && return str
@@ -7,19 +7,19 @@ rm_strSpace(str::String)::String = begin
     return str
 end
 
-const Maybe{T} = Union{T, Nothing}
+# const Maybe{T} = Union{T, Nothing}
 
-abstract type StringParser end
-const SuStringParser = Union{Real, String, StringParser}
+abstract type StrParser end
+const SuStrParser = Union{Real, String, StrParser}
 
-struct Clause <: StringParser
+struct Clause <: StrParser
     left::Char 
     right::Char
-    content::Maybe{SuStringParser}
+    content::Maybe{SuStrParser}
 end
-Clause(cl::Clause, content::Maybe{SuStringParser}) = Clause(cl.left, cl.right, content)
+Clause(cl::Clause, content::Maybe{SuStrParser}) = Clause(cl.left, cl.right, content)
 
-struct SingleParser <: StringParser
+struct SingleParser <: StrParser
     func::Maybe{Function}
 end
 
@@ -28,25 +28,25 @@ string_parse(line::String, parser::SingleParser) = begin
     return parser.func(line)
 end
 
-struct SepTwo <: StringParser 
+struct SepTwo <: StrParser 
     sep::String
-    left::Maybe{SuStringParser}
-    right::Maybe{SuStringParser}
+    left::Maybe{SuStrParser}
+    right::Maybe{SuStrParser}
 end
-SepTwo(st::SepTwo, left::Maybe{SuStringParser}, right::Maybe{SuStringParser}) = SepTwo(st.sep, left, right)
+SepTwo(st::SepTwo, left::Maybe{SuStrParser}, right::Maybe{SuStrParser}) = SepTwo(st.sep, left, right)
 
-struct SepMulti <: StringParser
+struct SepMulti <: StrParser
     sep::String 
-    content::Maybe{Union{StringParser, Vector{SuStringParser}}}
+    content::Maybe{Union{StrParser, Vector{SuStrParser}}}
 end
-SepMulti(sm::SepMulti, content::Maybe{Union{StringParser, Vector{SuStringParser}}}) = SepMulti(sm.sep, content)
+SepMulti(sm::SepMulti, content::Maybe{Union{StrParser, Vector{SuStrParser}}}) = SepMulti(sm.sep, content)
 
 
-"""Monad bind: M [a] -> ([a] -> b) -> M b"""
-mbind(x::Maybe{T}, f::Function) where T = begin
-    x isa Nothing && return x 
-    return f(x)
-end
+# """Monad bind: M [a] -> ([a] -> b) -> M b"""
+# maybebind(x::Maybe{T}, f::Function) where T = begin
+#     x isa Nothing && return x 
+#     return f(x)
+# end
 
 
 pass_bind(func::Function, x::Any, f::Maybe) = begin 
@@ -70,7 +70,7 @@ find_sep_index(str::String, sep::String, index::Int)::Maybe{Int} = begin
 end
 find_unique_sep_index(str::String, sep::String)::Int = begin 
     maybe_index = find_sep_index(str, sep, 1)
-    @assert mbind(maybe_index, i->find_sep_index(str[i+1:end], sep, 1)) isa Nothing 
+    @assert maybebind(maybe_index, i->find_sep_index(str[i+1:end], sep, 1)) isa Nothing 
     return maybe_index
 end
 
@@ -108,7 +108,7 @@ parse_sepmulti(str::String, sep::String)::Maybe = begin
     str = rm_strSpace(str)
     length(str)==0 && return nothing
     maybe_index = find_sep_index(str, sep, 1)
-    return mbind(maybe_index, i-> [str[1:i-1]] ⋄ parse_sepmulti(str[i+1:end], sep))
+    return maybebind(maybe_index, i-> [str[1:i-1]] ⋄ parse_sepmulti(str[i+1:end], sep))
 end
 
 string_parse(str::String, parser::SepMulti) = begin 
@@ -116,16 +116,16 @@ string_parse(str::String, parser::SepMulti) = begin
     @assert str[end]!==parser.sep 
     str = str*parser.sep
     content = parse_sepmulti(str, parser.sep)
-    map_string_parse(xs::Vector{String}, ys::Vector{SuStringParser}) = map(1:length(xs)) do  i
+    map_string_parse(xs::Vector{String}, ys::Vector{SuStrParser}) = map(1:length(xs)) do  i
         x, y = xs[i], ys[i]
         return string_parse(x, y)
     end
 
-    map_string_parse(xs::Vector{String}, ys::StringParser) = map(1:length(xs)) do  i
+    map_string_parse(xs::Vector{String}, ys::StrParser) = map(1:length(xs)) do  i
         x = xs[i]
         return string_parse(x, ys)
     end
 
-    return SepMulti(parser, Vector{SuStringParser}(chain(content, parser.content, map_string_parse, Val(:pass))))
+    return SepMulti(parser, Vector{SuStrParser}(chain(content, parser.content, map_string_parse, Val(:pass))))
 end
 
