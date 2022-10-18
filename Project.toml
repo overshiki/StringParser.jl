@@ -1,0 +1,7 @@
+name = "StringParser"
+uuid = "82027a8e-1502-4d66-bc09-336c403f5d02"
+authors = ["overshiki <le.niu@hotmail.com>"]
+version = "0.1.0"
+
+[deps]
+NestedArray = "03826054-d4ac-482b-9e88-e171687816a8"
