@@ -1,0 +1,7 @@
+REPOSITORY                          TAG                                 IMAGE ID       CREATED         SIZE
+xxx                                 pytorch                             911c22e97ca3   13 hours ago    24.1GB
+xxx                                 af_pytorch                          fc1ab207a85f   15 hours ago    21.3GB
+yyy                                 af_pytorch                          fc1ab207a85f   15 hours ago    21.3GB
+xxx                                 prepare                             c37fb980018c   17 hours ago    10.1GB
+xxx                                 prepare_enssential                  95c1e3d57e3b   17 hours ago    9.8GB
+xxx                                 anaconda                            7c96ec0b3d82   17 hours ago    8.51GB

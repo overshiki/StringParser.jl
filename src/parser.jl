@@ -1,4 +1,6 @@
-using NestedArray
+using NestedVector
+using EasyMonad
+import EasyMonad.(>>)
 
 rm_strSpace(str::String)::String = begin 
     length(str)==0 && return str
@@ -70,7 +72,7 @@ find_sep_index(str::String, sep::String, index::Int)::Maybe{Int} = begin
 end
 find_unique_sep_index(str::String, sep::String)::Int = begin 
     maybe_index = find_sep_index(str, sep, 1)
-    @assert maybebind(maybe_index, i->find_sep_index(str[i+1:end], sep, 1)) isa Nothing 
+    @assert (maybe_index >> i->find_sep_index(str[i+1:end], sep, 1)) isa Nothing 
     return maybe_index
 end
 
@@ -108,7 +110,7 @@ parse_sepmulti(str::String, sep::String)::Maybe = begin
     str = rm_strSpace(str)
     length(str)==0 && return nothing
     maybe_index = find_sep_index(str, sep, 1)
-    return maybebind(maybe_index, i-> [str[1:i-1]] ⋄ parse_sepmulti(str[i+1:end], sep))
+    return (maybe_index >> i-> [str[1:i-1]] ⋄ parse_sepmulti(str[i+1:end], sep))
 end
 
 string_parse(str::String, parser::SepMulti) = begin 
